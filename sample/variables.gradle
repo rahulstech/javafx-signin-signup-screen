@@ -1,0 +1,13 @@
+/**
+ * all project specific values will be added here
+ */
+
+ext {
+    group = '<< group name >>'
+    version = '<< project version >>'
+    jfxVersion = '<< open javafx version >>'
+    javafx = {
+        mainClassName = '<< javafx main class name'
+        applicationName = rootProject.name // root project name is set as application name
+    }
+}

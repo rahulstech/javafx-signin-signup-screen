@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version "0.0.10"
+}
+
+/**
+ * copy the /sample/variables.gradle to the project root folder
+ * and add the values accordingly
+ */
+apply from: "variables.gradle"
+
+group rootProject.ext.group
+version rootProject.ext.version
+
+javafx {
+    version = rootProject.ext.jfxVersion
+    modules = ['javafx.controls', 'javafx.fxml'] // add more javafx modules as required
+    application {
+        mainClassName = rootProject.ext.javafx.mainClassName
+        applicationName = rootProject.ext.javafx.applicationName
+    }
+}
+
+sourceSets {
+    main {
+        output.setResourcesDir(java.outputDir)
+    }
+    test {
+        output.setResourcesDir(java.outputDir)
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    // add another repositories as required
+}
+
+/**
+ * Uncomment the following dependencies as per requirement or add
+ * more dependencies as required
+ */
+dependencies {
+    // logging dependency
+    //implementation "org.apache.logging.log4j:log4j-api:2.11.1"
+    //implementation "org.apache.logging.log4j:log4j-core:2.11.1"
+    //implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.11.1"
+
+    // Junit 5
+    //testCompile 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+    //testCompile 'org.junit.jupiter:junit-jupiter-params:5.7.1'
+
+    // javafx ui unit test library
+    //testCompile "org.testfx:testfx-core:4.0.16-alpha"
+}
+
+// uncomment the flowing if you are using junit test
+//tasks.test {
+//    useJUnitPlatform()
+//}
