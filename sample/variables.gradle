@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * all project specific values will be added here
  */
-
 ext {
     group = '<< group name >>'
     version = '<< project version >>'
-    jfxVersion = '<< open javafx version >>'
+    jfxVersion = '11.0.2' // set the openjfx version, by default it's 11.0.2
     javafx = {
-        mainClassName = '<< javafx main class name'
+        mainClassName = '<< javafx main class name >> '
         applicationName = rootProject.name // root project name is set as application name
     }
 }
