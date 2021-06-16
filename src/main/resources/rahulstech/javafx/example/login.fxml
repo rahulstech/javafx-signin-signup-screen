@@ -11,10 +11,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <Group fx:id="root" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="rahulstech.javafx.example.LogInController">
    <children>
-      <AnchorPane id="login-panel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="491.0" prefWidth="415.0" stylesheets="@style.css">
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="491.0" prefWidth="415.0" styleClass="page" stylesheets="@style.css">
          <children>
             <Label layoutX="168.0" layoutY="27.0" text="LogIn" textFill="WHITE">
                <font>
@@ -31,7 +30,7 @@
                   <Font size="16.0" />
                </font>
             </PasswordField>
-            <ImageView fx:id="btnPasswordVisibility" fitHeight="39.0" fitWidth="38.0" layoutX="349.0" layoutY="194.0" onDragDetected="#onChangePasswordVisibility" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="btnPasswordVisibility" fitHeight="39.0" fitWidth="38.0" layoutX="342.0" layoutY="199.0" onDragDetected="#onChangePasswordVisibility" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@visibility_white.png" />
                </image>

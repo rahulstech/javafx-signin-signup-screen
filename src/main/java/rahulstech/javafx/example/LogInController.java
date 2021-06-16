@@ -2,17 +2,14 @@ package rahulstech.javafx.example;
 
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 
 import java.net.URL;
-import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.function.Supplier;
 
 import static rahulstech.javafx.example.Helper.*;
-import static rahulstech.javafx.example.Helper.FloatingMessageType.ERROR;
+import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
 
 public class LogInController implements Initializable {
 
@@ -21,23 +18,16 @@ public class LogInController implements Initializable {
     public ImageView btnPasswordVisibility;
     public Group root;
 
-    private Optional<Node> msgUsername = Optional.empty();
-    private Optional<Node> msgPassword = Optional.empty();
-
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
-    }
+    public void initialize(URL location, ResourceBundle resources) {}
 
     public void onClickLogIn() {
         String _username = username.getText();
         String _password = password.getText();
         boolean canLogIn = true;
 
-        Node n1 = msgUsername.orElseGet(() -> null);
-        if (null != n1) root.getChildren().remove(n1);
-        Node n2 = msgPassword.orElseGet(() -> null);
-        if (null != n2)root.getChildren().remove(n2);
+        removeFloatingMessage(password);
+        removeFloatingMessage(username);
         if (isEmptyString(_username)) {
             showFloatingMessage(username,"empty field",ERROR);
             canLogIn = false;
@@ -48,11 +38,7 @@ public class LogInController implements Initializable {
         }
         if (canLogIn){
             UserService service = new UserService();
-            service.valueProperty().addListener((prop,odlV,newV) -> {
-                if (UserService.LOGIN == newV.getTaskCode()) {
-                    onLogInTaskComplete(newV);
-                }
-            });
+            service.valueProperty().addListener((prop,odlV,newV) -> onLogInTaskComplete(newV));
             service.login(_username,_password);
         }
     }
@@ -65,6 +51,7 @@ public class LogInController implements Initializable {
     }
 
     public void onClickSignUp() {
+        App.loadScreen("signup.fxml");
     }
 
     public void onChangePasswordVisibility() {
@@ -72,10 +59,8 @@ public class LogInController implements Initializable {
 
     private void onLogInTaskComplete(UserService.Result result) {
         int resultCode = result.getResultCode();
-        Node n1 = msgUsername.orElseGet(() -> null);
-        if (null != n1) root.getChildren().remove(n1);
-        Node n2 = msgPassword.orElseGet(() -> null);
-        if (null != n2)root.getChildren().remove(n2);
+        removeFloatingMessage(username);
+        removeFloatingMessage(password);
         if (UserService.ERROR_NO_USER == resultCode) {
             showFloatingMessage(username,result.getMessage(),ERROR);
         }
@@ -92,35 +77,30 @@ public class LogInController implements Initializable {
     }
 
     private void removeFloatingMessage(TextField which) {
-        System.out.println("remove -> "+which.getId());
         if (which == username) {
-
-            msgUsername.ifPresent(n -> {
-                System.out.println("msgUsername -> "+msgUsername.isPresent());
-                root.getChildren().remove(n);
-            });
+            Helper.removeFloatingLabel(root, which,"msgUsername");
         }
-        else if (which == password) {
-
-            msgPassword.ifPresent(n -> {
-                System.out.println("msgPassword -> "+msgPassword.isPresent());
-                root.getChildren().remove(n);
-            });
+        else if (which == password ) {
+            Helper.removeFloatingLabel(root,which, "msgPassword");
         }
     }
 
     private void showFloatingMessage(TextField which, String message, FloatingMessageType type) {
-        Label floatingMsg = createFloatingMessage(message,type);
-        if (which == username)
-            msgUsername = Optional.of(floatingMsg);
-        else if (which == password)
-            msgPassword = Optional.of(floatingMsg);
+        Label floatingMsg;
+        if (which == username) {
+            floatingMsg = createFloatingMessage(message,type,"msgUsername");
+        }
+        else if (which == password) {
+            floatingMsg = createFloatingMessage(message,type,"msgPassword");
+        }
+        else
+            return;
 
         if (ERROR == type) {
-            Helper.showFloatingMessage(root,which,floatingMsg,createHorizontalShakeAnimation(floatingMsg));
+            Helper.showFloatingMessage(root,which,floatingMsg,type,createHorizontalShakeAnimation(floatingMsg));
         }
         else {
-            Helper.showFloatingMessage(root,which,floatingMsg);
+            Helper.showFloatingMessage(root,which,floatingMsg, type);
         }
     }
 }

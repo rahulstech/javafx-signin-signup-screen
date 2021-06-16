@@ -16,15 +16,32 @@ public class App extends Application {
         return mainWindow;
     }
 
+    public static void loadScreen(String fxml) {
+        try {
+            URL url = App.class.getResource(fxml);
+            Parent parent = FXMLLoader.load(url);
+            Scene scene = mainWindow.getScene();
+            if (null == scene) {
+                URL style = App.class.getResource("style.css");
+                scene = new Scene(parent);
+                scene.getStylesheets().add(style.toExternalForm());
+                mainWindow.setScene(scene);
+            }
+            else {
+                scene.setRoot(parent);
+                mainWindow.sizeToScene();
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void start(Stage primaryStage) throws Exception {
         mainWindow = primaryStage;
-        URL view = getClass().getResource("login.fxml");
-        URL style = getClass().getResource("style.css");
-        Parent root = FXMLLoader.load(view);
-        Scene scene = new Scene(root);
-        scene.getStylesheets().addAll(style.toExternalForm());
-        primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        loadScreen("login.fxml");
         primaryStage.show();
     }
 

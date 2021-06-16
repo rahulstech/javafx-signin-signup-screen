@@ -1,4 +1,4 @@
-#login-panel {
+.page {
     -fx-background-color: linear-gradient(to bottom right, #283593 0%, #651FFF 70%, #2979FF 100%);
 }
 
@@ -21,6 +21,11 @@
 
 .text-field:focused.success {
     -fx-border-color: #4CAF50;
+}
+
+
+.text-field:focused.warning {
+    -fx-border-color: #FF9800;
 }
 
 .button {
@@ -62,7 +67,7 @@
     -fx-font-size: 14px;
     -fx-padding: 4px;
     -fx-background-radius: 10px;
-    -fx-max-height: 30px;
+    -fx-max-height: 100px;
 }
 
 .floating-message.error {

@@ -5,30 +5,17 @@ import javafx.concurrent.Task;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 
 public class UserService extends Service<UserService.Result> {
-
-    public static final int LOGIN = 1;
-    public static final int SIGNUP = 2;
 
     public static final int ERROR_NO_USER = 10;
     public static final int ERROR_PASSWORD_MISMATCH = 11;
     public static final int ERROR_USERNAME = 12;
     public static final int SUCCESSFUL = 100;
 
-    private final List<User> users = new ArrayList<>();
-
-    private final Queue<Task<Result>> tasks = new ArrayBlockingQueue<>(10);
-
-    public UserService() {
-        addInitialUsers();
-    }
-
-    private void addInitialUsers() {
+    private static List<User> users = new ArrayList<>();
+    static {
         for (int i = 1; i < 5; i++) {
             User user = new User(
                     UUID.randomUUID().toString(),
@@ -38,22 +25,23 @@ public class UserService extends Service<UserService.Result> {
         }
     }
 
+    private Task<Result> task = null;
+
+    public UserService() { }
+
     public void login(String username, String password) {
-        tasks.add(new LogInTask(username, password));
+        this.task = new LogInTask(username, password);
         start();
     }
 
     public void signup(User user) {
-        if (null == user) {
-            throw new NullPointerException("user == null");
-        }
-        tasks.add(new SingUpTask(user));
+        this.task = new SingUpTask(user);
         start();
     }
 
     @Override
     protected final Task<Result> createTask() {
-        return tasks.poll();
+        return task;
     }
 
     private static void simulateDelay(long millis) throws InterruptedException{
@@ -61,14 +49,9 @@ public class UserService extends Service<UserService.Result> {
     }
 
     public static class Result {
-        private int taskCode;
         private int resultCode;
         private String message = null;
         private Object output = null;
-
-        public int getTaskCode() {
-            return taskCode;
-        }
 
         public int getResultCode() {
             return resultCode;
@@ -96,7 +79,6 @@ public class UserService extends Service<UserService.Result> {
         @Override
         protected Result call() throws Exception {
             Result result = new Result();
-            result.taskCode = LOGIN;
 
             String username = this.username;
             String password = this.password;
@@ -143,7 +125,6 @@ public class UserService extends Service<UserService.Result> {
         @Override
         protected Result call() throws Exception {
             Result result = new Result();
-            result.taskCode = SIGNUP;
 
             User newUser = this.user;
             boolean exists = false;
@@ -176,6 +157,5 @@ public class UserService extends Service<UserService.Result> {
             return result;
         }
     }
-
 
 }

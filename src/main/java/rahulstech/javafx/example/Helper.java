@@ -5,8 +5,16 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.scene.effect.BlendMode;
+import javafx.scene.image.ImageView;
 import javafx.util.Duration;
+
+import java.util.Set;
+
+import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
+import static rahulstech.javafx.example.Helper.FloatingMessageType.SUCCESS;
 
 public class Helper {
 
@@ -17,8 +25,9 @@ public class Helper {
         INFORMATION
     }
 
-    public static Label createFloatingMessage(String message, FloatingMessageType type) {
+    public static Label createFloatingMessage(String message, FloatingMessageType type, String id) {
         Label label = new Label(message);
+        label.setId(id);
         label.getStyleClass().add("floating-message");
         if (FloatingMessageType.ERROR == type) {
             label.getStyleClass().add("error");
@@ -35,23 +44,48 @@ public class Helper {
         label.setVisible(false);
         label.setWrapText(true);
         label.setBlendMode(BlendMode.SRC_OVER);
-
         return label;
     }
 
-    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg) {
+    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, FloatingMessageType type) {
         double x = msgFor.getLayoutX();
         double y = msgFor.getLayoutY();
         double height = msgFor.getHeight();
+        double width = msgFor.getWidth();
 
         container.getChildren().add(floatingMsg);
-        floatingMsg.relocate(x,y+height);
+        floatingMsg.relocate(x,y+height+6);
         floatingMsg.setVisible(true);
+        floatingMsg.setMaxWidth(width);
+
+        if (ERROR == type) {
+            msgFor.getStyleClass().add("error");
+        }
+        else if (INFORMATION == type){
+            msgFor.getStyleClass().add("information");
+        }
+        else if (WARNING == type) {
+            msgFor.getStyleClass().add("warning");
+        }
+        else if (SUCCESS == type) {
+            msgFor.getStyleClass().add("success");
+        }
     }
 
-    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, Animation enterAnimation) {
-        showFloatingMessage(container, msgFor, floatingMsg);
+    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, FloatingMessageType type, Animation enterAnimation) {
+        showFloatingMessage(container, msgFor, floatingMsg, type);
         enterAnimation.play();
+    }
+
+    public static void removeFloatingLabel(Group container, TextField msgFor, String id) {
+        Set<Node> nodes = container.lookupAll("#"+id);
+        for (Node floatingMsg : nodes)
+        if (null != floatingMsg) {
+            floatingMsg.toBack();
+            floatingMsg.setVisible(false);
+            container.getChildren().remove(floatingMsg);
+        }
+        msgFor.getStyleClass().removeAll("error","information","success","warning");
     }
 
     public static Animation createHorizontalShakeAnimation(Node node) {
@@ -75,6 +109,10 @@ public class Helper {
         timeline.getKeyFrames().addAll(frame1,frame2,frame3,frame4,frame5);
 
         return timeline;
+    }
+
+    public static void changePasswordVisibility(PasswordField field, ImageView toggleButton) {
+
     }
 
     public static boolean isEmptyString(String s) {
