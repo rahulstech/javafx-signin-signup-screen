@@ -26,18 +26,6 @@ plugins {
  */
 apply from: "variables.gradle"
 
-group rootProject.ext.group
-version rootProject.ext.version
-
-javafx {
-    version = rootProject.ext.jfxVersion
-    modules = ['javafx.controls', 'javafx.fxml'] // add more javafx modules as required
-    application {
-        mainClassName = rootProject.ext.javafx.mainClassName
-        applicationName = rootProject.ext.javafx.applicationName
-    }
-}
-
 sourceSets {
     main {
         output.setResourcesDir(java.outputDir)
@@ -58,6 +46,7 @@ repositories {
  * more dependencies as required
  */
 dependencies {
+
     // logging dependency
     //implementation "org.apache.logging.log4j:log4j-api:2.11.1"
     //implementation "org.apache.logging.log4j:log4j-core:2.11.1"
