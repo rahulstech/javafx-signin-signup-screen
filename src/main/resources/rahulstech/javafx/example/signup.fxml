@@ -11,10 +11,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <Group fx:id="root" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="rahulstech.javafx.example.SignupController">
    <children>
-      <AnchorPane prefHeight="656.0" prefWidth="511.0" styleClass="page">
+      <AnchorPane prefHeight="609.0" prefWidth="511.0" styleClass="page">
          <children>
             <Label layoutX="196.0" layoutY="35.0" text="Sign Up" textFill="WHITE">
                <font>
@@ -31,7 +30,7 @@
                   <Font size="16.0" />
                </font>
             </PasswordField>
-            <ImageView fx:id="btnPasswordVisibility" fitHeight="39.0" fitWidth="38.0" layoutX="396.0" layoutY="211.0" onDragDetected="#onChangePasswordVisibility" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="btnPasswordVisibility" fitHeight="39.0" fitWidth="38.0" layoutX="396.0" layoutY="211.0" onDragDetected="#onChangePasswordVisibility" onMouseClicked="#onChangePasswordVisibility" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@visibility_white.png" />
                </image>
@@ -51,7 +50,7 @@
                   <Font size="16.0" />
                </font>
             </PasswordField>
-            <ImageView fx:id="btnConfirmPasswordVisibility" fitHeight="39.0" fitWidth="38.0" layoutX="396.0" layoutY="294.0" onDragDetected="#onChangeConfirmPasswordVisibility" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="btnConfirmPasswordVisibility" fitHeight="39.0" fitWidth="38.0" layoutX="396.0" layoutY="294.0" onDragDetected="#onChangeConfirmPasswordVisibility" onMouseClicked="#onChangeConfirmPasswordVisibility" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@visibility_white.png" />
                </image>
@@ -71,14 +70,13 @@
                   <Font size="16.0" />
                </font>
             </TextField>
-            <Button fx:id="btnLogin" layoutX="142.0" layoutY="465.0" mnemonicParsing="false" onAction="#onClickSignUp" prefHeight="25.0" prefWidth="220.0" styleClass="btn-solid" text="Sign Up" />
-            <Button id="btn-cancel" fx:id="btnCancel" layoutX="142.0" layoutY="526.0" mnemonicParsing="false" onAction="#onClickCancel" prefHeight="44.0" prefWidth="220.0" styleClass="btn-transparent" text="Cancel" />
-            <Hyperlink fx:id="linkLogIn" layoutX="313.0" layoutY="594.0" onAction="#onClickLogIn" text="Log In">
+            <Button fx:id="btnSignUp" layoutX="142.0" layoutY="474.0" mnemonicParsing="false" onAction="#onClickSignUp" prefHeight="25.0" prefWidth="220.0" styleClass="btn-solid" text="Sign Up" />
+            <Hyperlink fx:id="linkLogIn" layoutX="314.0" layoutY="553.0" onAction="#onClickLogIn" text="Log In">
                <font>
                   <Font size="14.0" />
                </font>
             </Hyperlink>
-            <Label layoutX="140.0" layoutY="598.0" text="Already have an account?" textFill="WHITE">
+            <Label layoutX="141.0" layoutY="557.0" text="Already have an account?" textFill="WHITE">
                <font>
                   <Font size="14.0" />
                </font>

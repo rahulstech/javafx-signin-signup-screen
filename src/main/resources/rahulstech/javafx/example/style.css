@@ -2,6 +2,8 @@
     -fx-background-color: linear-gradient(to bottom right, #283593 0%, #651FFF 70%, #2979FF 100%);
 }
 
+/* TextField related styling */
+
 .text-field {
     -fx-background-color: transparent;
     -fx-border-color: #9E9E9E;
@@ -23,10 +25,15 @@
     -fx-border-color: #4CAF50;
 }
 
-
 .text-field:focused.warning {
     -fx-border-color: #FF9800;
 }
+
+.text-field:focused.information {
+    -fx-border-color: #00BCD4;
+}
+
+/* Button related styling */
 
 .button {
     -fx-background-radius: 22px;
@@ -52,6 +59,8 @@
     -fx-background-color: rgba(40,53,147,.25);
 }
 
+/* Hyperlink related styling */
+
 .hyperlink {
     -fx-text-fill: #FDD835;
     -fx-border-color: transparent;
@@ -61,13 +70,13 @@
     -fx-underline: true;
 }
 
+/* Floating Message related styling */
 
 .floating-message {
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-padding: 4px;
     -fx-background-radius: 10px;
-    -fx-max-height: 100px;
 }
 
 .floating-message.error {

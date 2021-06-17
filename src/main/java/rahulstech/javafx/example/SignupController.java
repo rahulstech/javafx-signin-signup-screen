@@ -1,10 +1,14 @@
 package rahulstech.javafx.example;
 
+import javafx.concurrent.Worker;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -12,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
+import static rahulstech.javafx.example.Helper.createFloatingMessage;
 import static rahulstech.javafx.example.Helper.isEmptyString;
 import static rahulstech.javafx.example.UserService.ERROR_USERNAME;
 import static rahulstech.javafx.example.UserService.SUCCESSFUL;
@@ -24,39 +29,96 @@ public class SignupController implements Initializable {
     public TextField inputGivenName;
     public TextField inputFamilyName;
     public Group root;
+    public Button btnSignUp;
+
+    private Node progressBar = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         App.getMainWindow().setTitle("Sign Up");
+        username.focusedProperty().addListener((prop,oldV,newV) -> {
+            if (newV)
+                showUsernameHint();
+            else
+                removeUsernameHint();
+        });
         password.focusedProperty().addListener((prop,oldV,newV) -> {
             if (!newV)
-                removeFloatingMessage(password);
+                removePasswordHint();
             else
-                showPasswordHint(password);
+                showPasswordHint();
         });
         password.textProperty().addListener((prop,oldV,newV) -> {
-            removeFloatingMessage(password);
-            showPasswordHint(password);
+            removePasswordHint();
+            showPasswordHint();
+        });
+        confirmPassword.focusedProperty().addListener((prop,oldV,newV) -> {
+            if (!newV)
+                removeConfirmPasswordHint();
+            else
+                showConfirmPasswordHint();
         });
     }
 
-    private void showPasswordHint(PasswordField which) {
-        String text = which.getText();
-        if (isEmptyString(text) || text.length() < 8) {
-            showFloatingMessage(which,"Password length must be minimum 8 characters",ERROR);
-            return;
-        }
+    private void removeUsernameHint() {
+        Helper.removeFloatingLabel(root,username,"msgUsernameHint");
+        username.getStyleClass().removeAll("information");
+    }
+
+    private void showUsernameHint() {
+        String message = "Use english alphanumeric (A-Z,a-z,0-9) minimum 6 length";
+        Label floatingMsg = Helper.createFloatingMessage(message,INFORMATION,"msgUsernameHint");
+        Helper.showFloatingMessage(root,username,floatingMsg,INFORMATION);
+        username.getStyleClass().add("information");
+    }
+
+    private void removePasswordHint() {
+        Helper.removeFloatingLabel(root,password,"msgPasswordHint");
+        password.getStyleClass().removeAll("error","information","success","warning");
+    }
+
+    private void showPasswordHint() {
+        String text = password.getText();
         Matcher symbolMatcher = Pattern.compile("[\\!@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\+]+").matcher(text);
         Matcher digitMatcher = Pattern.compile("[\\d]+").matcher(text);
-        if (!symbolMatcher.find()) {
-            showFloatingMessage(which,"Password must contain at least one of !@#$%^&*()-+",WARNING);
+
+        Helper.FloatingMessageType type = INFORMATION;
+        StringBuilder builder = new StringBuilder();
+        if (isEmptyString(text) || text.length() < 8) {
+            builder.append("\u2022 at least 8 character long\n");
+            type = WARNING;
         }
-        else if (!digitMatcher.find()) {
-            showFloatingMessage(which,"Password must contain at least one digit",WARNING);
+        if (!symbolMatcher.find()) {
+            builder.append("\u2022 contain at least one of the special characters !@#$%^&*()-+\n");
+            type = ERROR;
+        }
+        if (!digitMatcher.find()) {
+            builder.append("\u2022 contain at least one digit\n");
+            type = ERROR;
+        }
+
+        String message;
+        if (builder.length() == 0) {
+            message = "Strong Password";
+            type = SUCCESS;
         }
         else {
-            showFloatingMessage(which,"Strong Password",SUCCESS);
+            message = "Password must:\n"+builder.toString();
+            if (isEmptyString(text)) type = INFORMATION;
         }
+
+        Label floatingMsg = Helper.createFloatingMessage(message,type,"msgPasswordHint");
+        Helper.showFloatingMessage(root,password,floatingMsg,type);
+    }
+
+    private void removeConfirmPasswordHint() {
+        Helper.removeFloatingLabel(root,confirmPassword,"msgConfirmPasswordHint");
+        confirmPassword.getStyleClass().removeAll("error","information","warning","success");
+    }
+
+    private void showConfirmPasswordHint() {
+        Label floatingMsg = Helper.createFloatingMessage("Retype password here",INFORMATION,"msgConfirmPasswordHint");
+        Helper.showFloatingMessage(root,confirmPassword,floatingMsg,INFORMATION);
     }
 
     public void onChangePasswordVisibility() {
@@ -76,6 +138,10 @@ public class SignupController implements Initializable {
         removeAllFloatingMessage();
         if (isEmptyString(_username)) {
             showErrorFloatingMessage(username,"empty field");
+            valid = false;
+        }
+        else if (!_username.matches("[A-Za-z\\d]{6,}")) {
+            showErrorFloatingMessage(username,"invalid username");
             valid = false;
         }
         if (isEmptyString(_password)) {
@@ -107,13 +173,18 @@ public class SignupController implements Initializable {
             user.setFamilyName(familyName);
 
             UserService service = new UserService();
+            service.stateProperty().addListener((prop,oldV,newV) -> {
+                if (Worker.State.RUNNING == newV || Worker.State.SCHEDULED == newV) {
+                    showProgressBar(service);
+                }
+                else if (Worker.State.FAILED == newV || Worker.State.SUCCEEDED == newV
+                        || Worker.State.CANCELLED == newV) {
+                    hideProgressBar();
+                }
+            });
             service.valueProperty().addListener((prop,oldV,newV) -> onCompleteSignUp(newV));
             service.signup(user);
         }
-    }
-
-    public void onClickCancel() {
-        App.getMainWindow().close();
     }
 
     public void onClickLogIn() {
@@ -131,7 +202,7 @@ public class SignupController implements Initializable {
     }
 
     private void handleSuccessfulSignUp(User user) {
-
+        // TODO: implement handleSuccessfulSignUp
     }
 
     private void removeAllFloatingMessage() {
@@ -162,14 +233,10 @@ public class SignupController implements Initializable {
     }
 
     private void showErrorFloatingMessage(TextField which, String message) {
-        showFloatingMessage(which,message,ERROR,false);
+        showFloatingMessage(which,message,ERROR);
     }
 
     private void showFloatingMessage(TextField which, String message, Helper.FloatingMessageType type) {
-        showFloatingMessage(which,message,type,true);
-    }
-
-    private void showFloatingMessage(TextField which, String message, Helper.FloatingMessageType type, boolean isErrorInfo) {
         Label floatingMsg;
         if (which == username) {
             floatingMsg = Helper.createFloatingMessage(message,type,"msgUsername");
@@ -189,16 +256,28 @@ public class SignupController implements Initializable {
         else return;
 
         if (ERROR == type) {
-            if (!isErrorInfo) {
-                Helper.showFloatingMessage(root, which, floatingMsg, type,
-                        Helper.createHorizontalShakeAnimation(floatingMsg));
-            }
-            else {
-                Helper.showFloatingMessage(root, which, floatingMsg, type);
-            }
+            Helper.showFloatingMessage(root, which, floatingMsg, type,
+                    Helper.createHorizontalShakeAnimation(floatingMsg));
         }
         else {
             Helper.showFloatingMessage(root,which,floatingMsg, type);
         }
+    }
+
+    private void showProgressBar(UserService service) {
+        double endHeight = 100;
+        double endWidth = 100;
+        this.progressBar =  Helper.createCircularInfiniteProgressBar(endHeight,endWidth,
+                Color.web("#F06292"),Color.web("#EC407A",.6),Color.web("#EC407A"),
+                true, App.class.getResource("close_white.png").toExternalForm(),
+                e -> service.cancel());
+        Helper.animateButtonToProgressBar(root,btnSignUp,endWidth,endHeight,progressBar);
+    }
+
+    private void hideProgressBar() {
+        if (null == progressBar) return;
+        Node progressBar = this.progressBar;
+        Helper.animateProgressBarToButton(root,btnSignUp,220,44,progressBar);
+        this.progressBar = null;
     }
 }
