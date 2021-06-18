@@ -1,3 +1,18 @@
+<!--
+   Copyright 2021 rahustech
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.Group?>
@@ -46,7 +61,7 @@
                </image>
             </ImageView>
             <Button fx:id="btnLogin" layoutX="95.0" layoutY="324.0" mnemonicParsing="false" onAction="#onClickLogIn" prefHeight="25.0" prefWidth="220.0" styleClass="btn-solid" text="Log In" />
-            <Hyperlink layoutX="197.0" layoutY="246.0" text="Forget password?">
+            <Hyperlink layoutX="197.0" layoutY="246.0" onAction="#onClickForgetPassword" text="Forget password?">
                <font>
                   <Font size="14.0" />
                </font>

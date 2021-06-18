@@ -1,12 +1,27 @@
+/**
+ * Copyright 2021 rahulstch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package rahulstech.javafx.example;
 
 import javafx.animation.*;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
@@ -15,9 +30,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.util.Duration;
-
-import java.security.Key;
-import java.util.Set;
 
 import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
 import static rahulstech.javafx.example.Helper.FloatingMessageType.SUCCESS;
@@ -54,6 +66,7 @@ public class Helper {
     }
 
     public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, FloatingMessageType type) {
+
         double x = msgFor.getLayoutX();
         double y = msgFor.getLayoutY();
         double height = msgFor.getHeight();
@@ -84,13 +97,11 @@ public class Helper {
     }
 
     public static void removeFloatingLabel(Group container, TextField msgFor, String id) {
-        Set<Node> nodes = container.lookupAll("#"+id);
-        for (Node floatingMsg : nodes) {
-            if (null != floatingMsg) {
-                floatingMsg.toBack();
-                floatingMsg.setVisible(false);
-                container.getChildren().remove(floatingMsg);
-            }
+        Node floatingMsg = container.lookup("#"+id);
+        if (null != floatingMsg) {
+            floatingMsg.toBack();
+            floatingMsg.setVisible(false);
+            container.getChildren().remove(floatingMsg);
         }
         msgFor.getStyleClass().removeAll("error","information","success","warning");
     }
@@ -124,10 +135,12 @@ public class Helper {
         double width = control.getWidth();
         double scaleX = endWidth/width;
         double scaleY = endHeight/height;
+        double positionX = control.getLayoutX()+endWidth/2;
+        double positionY = control.getLayoutY()-endHeight/4;
 
         progressBar.setOpacity(0);
         root.getChildren().add(progressBar);
-        progressBar.relocate(control.getLayoutX()+endWidth/2,control.getLayoutY()-endHeight/4);
+        progressBar.relocate(positionX,positionY);
 
         Timeline animation = new Timeline();
 
@@ -138,7 +151,7 @@ public class Helper {
 
         KeyValue v6 = new KeyValue(progressBar.opacityProperty(),0);
         KeyValue v8 = new KeyValue(control.opacityProperty(),0);
-        KeyFrame frame3 = new KeyFrame(Duration.millis(250),v6,v8);
+        KeyFrame frame3 = new KeyFrame(Duration.millis(220),v6,v8);
 
         KeyValue v3 = new KeyValue(control.scaleXProperty(),scaleX);
         KeyValue v4 = new KeyValue(control.scaleYProperty(),scaleY);
@@ -149,7 +162,9 @@ public class Helper {
         animation.play();
     }
 
-    public static void animateProgressBarToButton(Group root, Control control, double endWidth, double endHeight, Node progressBar) {
+    public static void animateProgressBarToButton(Group root, Control control, double endWidth, double endHeight, String id) {
+
+        Node progressBar = root.lookup("#"+id);
 
         double height = control.getHeight();
         double width = control.getWidth();
@@ -158,23 +173,18 @@ public class Helper {
 
         Timeline animation = new Timeline();
 
-        KeyValue v1 = new KeyValue(progressBar.opacityProperty(),1);
-        KeyValue v2 = new KeyValue(control.scaleXProperty(),control.getScaleX());
-        KeyValue v3 = new KeyValue(control.scaleYProperty(),control.getScaleY());
-        KeyFrame frame1 = new KeyFrame(Duration.ZERO,v1,v2,v3);
-
         KeyValue v4 = new KeyValue(progressBar.opacityProperty(),0);
         KeyValue v5 = new KeyValue(control.opacityProperty(),1);
-        KeyFrame frame2 = new KeyFrame(Duration.millis(1500),v4,v5);
+        KeyFrame frame2 = new KeyFrame(Duration.millis(120),v4,v5);
 
         KeyValue v6 = new KeyValue(control.scaleXProperty(),scaleX);
         KeyValue v7 = new KeyValue(control.scaleYProperty(),scaleY);
-        KeyFrame frame3 = new KeyFrame(Duration.millis(3000),v6,v7);
+        KeyFrame frame3 = new KeyFrame(Duration.millis(300),v6,v7);
 
-        animation.getKeyFrames().addAll(frame1,frame2,frame3);
+        animation.getKeyFrames().addAll(frame2,frame3);
         animation.setOnFinished(e -> {
-            System.out.println("finished "+progressBar);
-            //progressBar.toBack();
+            progressBar.toBack();
+            progressBar.setVisible(false);
             root.getChildren().remove(progressBar);
         });
         animation.play();
@@ -182,9 +192,11 @@ public class Helper {
 
     public static Node createCircularInfiniteProgressBar(double height, double width,
                                                          Color baseColor, Color trackColor, Color thumbColor,
+                                                         String id,
                                                          boolean showCenterButton, String centerButtonImage,
                                                          EventHandler<MouseEvent> centerButtonClickHandler) {
         Group progressBar = new Group();
+        progressBar.setId(id);
 
         double centerX = width/2;
         double centerY = height/2;
@@ -221,13 +233,10 @@ public class Helper {
 
         Timeline anim = new Timeline();
 
-        KeyValue v1 = new KeyValue(thumb.startAngleProperty(),0);
-        KeyFrame frame1 = new KeyFrame(Duration.ZERO,v1);
-
         KeyValue v2 = new KeyValue(thumb.startAngleProperty(),-360);
         KeyFrame frame2 = new KeyFrame(Duration.millis(1800),v2);
 
-        anim.getKeyFrames().addAll(frame1,frame2);
+        anim.getKeyFrames().addAll(frame2);
 
         anim.setCycleCount(Timeline.INDEFINITE);
         anim.play();
@@ -247,6 +256,69 @@ public class Helper {
                 btnClose.setOnMouseClicked(centerButtonClickHandler);
         }
         return progressBar;
+    }
+
+    public static void showOperationStatus(Group container, String progressBarId, boolean success, Runnable onAnimFinish) {
+
+        Node progressBar = container.lookup("#"+progressBarId);
+
+        Bounds boundsInParent = progressBar.getBoundsInParent();
+        Bounds layoutBounds = progressBar.getLayoutBounds();
+
+        double positionX = boundsInParent.getMinX()+13;
+        double positionY = boundsInParent.getMinY()+13;
+        Color baseColor = success ? Color.web("#43A047") : Color.web("#f44336");
+        String icon = success ? App.class.getResource("done_white.png").toExternalForm()
+                : App.class.getResource("close_white.png").toExternalForm();
+
+        Group view = new Group();
+        view.setId(progressBarId);
+
+        double centerX = (layoutBounds.getMinX()+layoutBounds.getMaxX())*0.5;
+        double centerY = (layoutBounds.getMinY()+layoutBounds.getMaxY())*0.5;
+        double radius = Math.min(centerX,centerY)-8;
+        double finalRadius = radius+8;
+
+        Circle base = new Circle();
+        base.setCenterX(centerX);
+        base.setCenterY(centerY);
+        base.setRadius(radius-6);
+        base.setFill(baseColor);
+
+        view.getChildren().add(base);
+
+        Timeline anim = new Timeline();
+
+        KeyValue v2 = new KeyValue(base.radiusProperty(),finalRadius);
+        KeyFrame frame2 = new KeyFrame(Duration.millis(300),v2);
+
+        KeyFrame frame3 = new KeyFrame(Duration.millis(1500));
+
+        anim.getKeyFrames().addAll(frame2,frame3);
+        anim.setOnFinished(e -> {
+            progressBar.toBack();
+            progressBar.setVisible(false);
+            container.getChildren().remove(progressBar);
+            if (null != onAnimFinish)
+                onAnimFinish.run();
+        });
+
+        double iconWidth = 1.41*radius-5;
+        double iconHeight = 1.41*radius-5;
+        double iconX = centerX - iconWidth/2;
+        double iconY = centerY - iconHeight/2;
+
+        Image btnCloseImage = new Image(icon,
+                iconWidth, iconHeight, true, true);
+        ImageView btnClose = new ImageView(btnCloseImage);
+
+        view.getChildren().add(btnClose);
+        btnClose.relocate(iconX, iconY);
+
+        container.getChildren().add(view);
+        view.relocate(positionX,positionY);
+
+        anim.play();
     }
 
     public static boolean isEmptyString(String s) {

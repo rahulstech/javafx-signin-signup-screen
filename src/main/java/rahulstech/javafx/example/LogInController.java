@@ -1,3 +1,18 @@
+/**
+ * Copyright 2021 rahulstch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package rahulstech.javafx.example;
 
 import javafx.concurrent.Worker;
@@ -5,7 +20,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 
@@ -23,11 +37,16 @@ public class LogInController implements Initializable {
     public Group root;
     public Button btnLogin;
 
-    private Node progressBar = null;
+    private PasswordVisibilityHelper passwordHelper;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         App.getMainWindow().setTitle("Log In");
+        passwordHelper = new PasswordVisibilityHelper(root,password,btnPasswordVisibility);
+    }
+
+    public void onClickForgetPassword() {
+        // implement this method to handle forget password
     }
 
     public void onClickLogIn() {
@@ -38,21 +57,30 @@ public class LogInController implements Initializable {
         removeFloatingMessage(password);
         removeFloatingMessage(username);
         if (isEmptyString(_username)) {
-            showFloatingMessage(username,"empty field",ERROR);
+            showErrorFloatingMessage(username,"empty field");
             canLogIn = false;
         }
         if (isEmptyString(_password)) {
-            showFloatingMessage(password,"empty field",ERROR);
+            showErrorFloatingMessage(password,"empty field");
             canLogIn = false;
         }
         if (canLogIn){
             UserService service = new UserService();
             service.stateProperty().addListener((prop,oldV,newV) -> {
-                if (Worker.State.RUNNING == newV || Worker.State.SCHEDULED == newV) {
+                if (Worker.State.SCHEDULED == newV) {
                     showProgressBar(service);
                 }
-                else if (Worker.State.FAILED == newV || Worker.State.SUCCEEDED == newV
-                        || Worker.State.CANCELLED == newV) {
+                else if (Worker.State.SUCCEEDED == newV) {
+                    // it means task executed successfully
+                    // but may contain error
+                    UserService.Result result = service.getValue();
+                    int resultCode = result.getResultCode();
+                    showOperationStatusAndHideProgressBar(UserService.SUCCESSFUL == resultCode);
+                }
+                else if (Worker.State.FAILED == newV) {
+                    showOperationStatusAndHideProgressBar(false);
+                }
+                else if (Worker.State.CANCELLED == newV) {
                     hideProgressBar();
                 }
             });
@@ -66,7 +94,7 @@ public class LogInController implements Initializable {
     }
 
     public void onChangePasswordVisibility() {
-       // TODO: implement password visibility change method
+        passwordHelper.toggleVisibility();
     }
 
     private void onLogInTaskComplete(UserService.Result result) {
@@ -74,10 +102,10 @@ public class LogInController implements Initializable {
         removeFloatingMessage(username);
         removeFloatingMessage(password);
         if (UserService.ERROR_NO_USER == resultCode) {
-            showFloatingMessage(username,result.getMessage(),ERROR);
+            showErrorFloatingMessage(username,result.getMessage());
         }
         else if (UserService.ERROR_PASSWORD_MISMATCH == resultCode) {
-            showFloatingMessage(password,result.getMessage(),ERROR);
+            showErrorFloatingMessage(password,result.getMessage());
         }
         else {
             handleSuccessfulLogIn(result.getOutput());
@@ -85,19 +113,21 @@ public class LogInController implements Initializable {
     }
 
     private void handleSuccessfulLogIn(User user) {
-        // TODO: implement handleSuccessfulLogIn
+        // use this method to store the logged in user
+        // currently there is no use for this method
     }
 
     private void removeFloatingMessage(TextField which) {
         if (which == username) {
             Helper.removeFloatingLabel(root, which,"msgUsername");
         }
-        else if (which == password ) {
+        else if (which == password) {
             Helper.removeFloatingLabel(root,which, "msgPassword");
         }
     }
 
-    private void showFloatingMessage(TextField which, String message, FloatingMessageType type) {
+    private void showErrorFloatingMessage(TextField which, String message) {
+        FloatingMessageType type = ERROR;
         Label floatingMsg;
         if (which == username) {
             floatingMsg = createFloatingMessage(message,type,"msgUsername");
@@ -108,28 +138,25 @@ public class LogInController implements Initializable {
         else
             return;
 
-        if (ERROR == type) {
-            Helper.showFloatingMessage(root,which,floatingMsg,type,createHorizontalShakeAnimation(floatingMsg));
-        }
-        else {
-            Helper.showFloatingMessage(root,which,floatingMsg, type);
-        }
+        Helper.showFloatingMessage(root,which,floatingMsg,type,createHorizontalShakeAnimation(floatingMsg));
     }
 
     private void showProgressBar(UserService service) {
         double endHeight = 100;
         double endWidth = 100;
-        this.progressBar =  Helper.createCircularInfiniteProgressBar(endHeight,endWidth,
+        Node progressBar = Helper.createCircularInfiniteProgressBar(endHeight,endWidth,
                 Color.web("#F06292"),Color.web("#EC407A",.6),Color.web("#EC407A"),
+                "login-progress",
                 true, App.class.getResource("close_white.png").toExternalForm(),
                 e -> service.cancel());
         Helper.animateButtonToProgressBar(root,btnLogin,endWidth,endHeight,progressBar);
     }
 
+    private void showOperationStatusAndHideProgressBar(boolean success) {
+        Helper.showOperationStatus(root,"login-progress", success, this::hideProgressBar);
+    }
+
     private void hideProgressBar() {
-        if (null == progressBar) return;
-        Node progressBar = this.progressBar;
-        Helper.animateProgressBarToButton(root,btnLogin,220,44,progressBar);
-        this.progressBar = null;
+        Helper.animateProgressBarToButton(root,btnLogin,220,44,"login-progress");
     }
 }

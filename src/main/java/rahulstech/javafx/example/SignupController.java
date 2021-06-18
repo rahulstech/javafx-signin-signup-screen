@@ -1,3 +1,18 @@
+/**
+ * Copyright 2021 rahulstch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package rahulstech.javafx.example;
 
 import javafx.concurrent.Worker;
@@ -8,6 +23,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 
 import java.net.URL;
@@ -16,7 +32,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
-import static rahulstech.javafx.example.Helper.createFloatingMessage;
 import static rahulstech.javafx.example.Helper.isEmptyString;
 import static rahulstech.javafx.example.UserService.ERROR_USERNAME;
 import static rahulstech.javafx.example.UserService.SUCCESSFUL;
@@ -30,19 +45,24 @@ public class SignupController implements Initializable {
     public TextField inputFamilyName;
     public Group root;
     public Button btnSignUp;
+    public ImageView btnPasswordVisibility;
+    public ImageView btnConfirmPasswordVisibility;
 
-    private Node progressBar = null;
+    private PasswordVisibilityHelper passwordHelper;
+    private PasswordVisibilityHelper confPasswordHelper;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         App.getMainWindow().setTitle("Sign Up");
+        passwordHelper = new PasswordVisibilityHelper(root,password,btnPasswordVisibility);
+        confPasswordHelper = new PasswordVisibilityHelper(root,confirmPassword,btnConfirmPasswordVisibility);
         username.focusedProperty().addListener((prop,oldV,newV) -> {
             if (newV)
                 showUsernameHint();
             else
                 removeUsernameHint();
         });
-        password.focusedProperty().addListener((prop,oldV,newV) -> {
+        passwordHelper.addFocusChangeListener((prop,oldV,newV) -> {
             if (!newV)
                 removePasswordHint();
             else
@@ -52,7 +72,7 @@ public class SignupController implements Initializable {
             removePasswordHint();
             showPasswordHint();
         });
-        confirmPassword.focusedProperty().addListener((prop,oldV,newV) -> {
+        confPasswordHelper.addFocusChangeListener((prop,oldV,newV) -> {
             if (!newV)
                 removeConfirmPasswordHint();
             else
@@ -73,12 +93,14 @@ public class SignupController implements Initializable {
     }
 
     private void removePasswordHint() {
-        Helper.removeFloatingLabel(root,password,"msgPasswordHint");
-        password.getStyleClass().removeAll("error","information","success","warning");
+        TextField field = passwordHelper.currentField();
+        Helper.removeFloatingLabel(root,field,"msgPasswordHint");
+        field.getStyleClass().removeAll("error","information","success","warning");
     }
 
     private void showPasswordHint() {
-        String text = password.getText();
+        TextField field = passwordHelper.currentField();
+        String text = field.getText();
         Matcher symbolMatcher = Pattern.compile("[\\!@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\+]+").matcher(text);
         Matcher digitMatcher = Pattern.compile("[\\d]+").matcher(text);
 
@@ -108,23 +130,27 @@ public class SignupController implements Initializable {
         }
 
         Label floatingMsg = Helper.createFloatingMessage(message,type,"msgPasswordHint");
-        Helper.showFloatingMessage(root,password,floatingMsg,type);
+        Helper.showFloatingMessage(root,field,floatingMsg,type);
     }
 
     private void removeConfirmPasswordHint() {
-        Helper.removeFloatingLabel(root,confirmPassword,"msgConfirmPasswordHint");
-        confirmPassword.getStyleClass().removeAll("error","information","warning","success");
+        TextField field = confPasswordHelper.currentField();
+        Helper.removeFloatingLabel(root,field,"msgConfirmPasswordHint");
+        field.getStyleClass().removeAll("error","information","warning","success");
     }
 
     private void showConfirmPasswordHint() {
+        TextField field = confPasswordHelper.currentField();
         Label floatingMsg = Helper.createFloatingMessage("Retype password here",INFORMATION,"msgConfirmPasswordHint");
-        Helper.showFloatingMessage(root,confirmPassword,floatingMsg,INFORMATION);
+        Helper.showFloatingMessage(root,field,floatingMsg,INFORMATION);
     }
 
     public void onChangePasswordVisibility() {
+        passwordHelper.toggleVisibility();
     }
 
     public void onChangeConfirmPasswordVisibility() {
+        confPasswordHelper.toggleVisibility();
     }
 
     public void onClickSignUp() {
@@ -174,11 +200,20 @@ public class SignupController implements Initializable {
 
             UserService service = new UserService();
             service.stateProperty().addListener((prop,oldV,newV) -> {
-                if (Worker.State.RUNNING == newV || Worker.State.SCHEDULED == newV) {
+                if ( Worker.State.SCHEDULED == newV) {
                     showProgressBar(service);
                 }
-                else if (Worker.State.FAILED == newV || Worker.State.SUCCEEDED == newV
-                        || Worker.State.CANCELLED == newV) {
+                else if (Worker.State.SUCCEEDED == newV) {
+                    // it means task executed successfully
+                    // but may contain error
+                    UserService.Result result = service.getValue();
+                    int resultCode = result.getResultCode();
+                    showOperationStatusAndHideProgressBar(UserService.SUCCESSFUL == resultCode);
+                }
+                else if (Worker.State.FAILED == newV) {
+                    showOperationStatusAndHideProgressBar(false);
+                }
+                else if (Worker.State.CANCELLED == newV) {
                     hideProgressBar();
                 }
             });
@@ -233,10 +268,7 @@ public class SignupController implements Initializable {
     }
 
     private void showErrorFloatingMessage(TextField which, String message) {
-        showFloatingMessage(which,message,ERROR);
-    }
-
-    private void showFloatingMessage(TextField which, String message, Helper.FloatingMessageType type) {
+        Helper.FloatingMessageType type = ERROR;
         Label floatingMsg;
         if (which == username) {
             floatingMsg = Helper.createFloatingMessage(message,type,"msgUsername");
@@ -255,29 +287,26 @@ public class SignupController implements Initializable {
         }
         else return;
 
-        if (ERROR == type) {
-            Helper.showFloatingMessage(root, which, floatingMsg, type,
-                    Helper.createHorizontalShakeAnimation(floatingMsg));
-        }
-        else {
-            Helper.showFloatingMessage(root,which,floatingMsg, type);
-        }
+        Helper.showFloatingMessage(root, which, floatingMsg, type,
+                Helper.createHorizontalShakeAnimation(floatingMsg));
     }
 
     private void showProgressBar(UserService service) {
         double endHeight = 100;
         double endWidth = 100;
-        this.progressBar =  Helper.createCircularInfiniteProgressBar(endHeight,endWidth,
+        Node progressBar =  Helper.createCircularInfiniteProgressBar(endHeight,endWidth,
                 Color.web("#F06292"),Color.web("#EC407A",.6),Color.web("#EC407A"),
+                "signup-progress",
                 true, App.class.getResource("close_white.png").toExternalForm(),
                 e -> service.cancel());
         Helper.animateButtonToProgressBar(root,btnSignUp,endWidth,endHeight,progressBar);
     }
 
+    private void showOperationStatusAndHideProgressBar(boolean success) {
+        Helper.showOperationStatus(root,"signup-progress", success, this::hideProgressBar);
+    }
+
     private void hideProgressBar() {
-        if (null == progressBar) return;
-        Node progressBar = this.progressBar;
-        Helper.animateProgressBarToButton(root,btnSignUp,220,44,progressBar);
-        this.progressBar = null;
+        Helper.animateProgressBarToButton(root,btnSignUp,220,44,"signup-progress");
     }
 }
