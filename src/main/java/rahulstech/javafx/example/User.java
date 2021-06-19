@@ -15,6 +15,9 @@
  */
 package rahulstech.javafx.example;
 
+/**
+ * Simple POJO class to hold single user related data
+ */
 public class User {
 
     private String userId;

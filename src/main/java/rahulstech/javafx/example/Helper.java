@@ -16,23 +16,19 @@
 package rahulstech.javafx.example;
 
 import javafx.animation.*;
-import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.util.Duration;
-
-import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
-import static rahulstech.javafx.example.Helper.FloatingMessageType.SUCCESS;
 
 public class Helper {
 
@@ -43,7 +39,15 @@ public class Helper {
         INFORMATION
     }
 
-    public static Label createFloatingMessage(String message, FloatingMessageType type, String id) {
+    /**
+     * Create a new floating message with an optional close button.
+     * The behaviour of the close button need to be implemented by
+     * the called of this method
+     *
+     * @param onClickedClose close button click handler,
+     *                       if null then no close button is added
+     */
+    public static Label createFloatingMessage(String message, FloatingMessageType type, String id, Runnable onClickedClose) {
         Label label = new Label(message);
         label.setId(id);
         label.getStyleClass().add("floating-message");
@@ -62,10 +66,28 @@ public class Helper {
         label.setVisible(false);
         label.setWrapText(true);
         label.setBlendMode(BlendMode.SRC_OVER);
+
+        boolean showCloseBtn = null != onClickedClose;
+        if (showCloseBtn) {
+            Image imageClose = new Image(App.class.getResource("close_white.png").toExternalForm(),
+                    18, 18, true, true);
+            ImageView btnClose = new ImageView(imageClose);
+            label.setOnMouseClicked(e -> {
+                Point2D ptClick = new Point2D(e.getX(), e.getY());
+                Bounds btnClockBounds = btnClose.getBoundsInParent();
+                if (btnClockBounds.contains(ptClick))
+                    onClickedClose.run();
+            });
+            label.setGraphic(btnClose);
+            label.setContentDisplay(ContentDisplay.RIGHT);
+        }
         return label;
     }
 
-    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, FloatingMessageType type) {
+    /**
+     * Show floating message without any animation
+     */
+    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg) {
 
         double x = msgFor.getLayoutX();
         double y = msgFor.getLayoutY();
@@ -76,34 +98,26 @@ public class Helper {
         floatingMsg.relocate(x,y+height+6);
         floatingMsg.setVisible(true);
         floatingMsg.setMaxWidth(width);
-
-        if (ERROR == type) {
-            msgFor.getStyleClass().add("error");
-        }
-        else if (INFORMATION == type){
-            msgFor.getStyleClass().add("information");
-        }
-        else if (WARNING == type) {
-            msgFor.getStyleClass().add("warning");
-        }
-        else if (SUCCESS == type) {
-            msgFor.getStyleClass().add("success");
-        }
     }
 
-    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, FloatingMessageType type, Animation enterAnimation) {
-        showFloatingMessage(container, msgFor, floatingMsg, type);
+    /**
+     * Show floating message with specified animation
+     */
+    public static void showFloatingMessage(Group container, Control msgFor, Label floatingMsg, Animation enterAnimation) {
+        showFloatingMessage(container, msgFor, floatingMsg);
         enterAnimation.play();
     }
 
-    public static void removeFloatingLabel(Group container, TextField msgFor, String id) {
+    /**
+     * Remove the specified floating message from the given parent if found
+     */
+    public static void removeFloatingLabel(Group container, String id) {
         Node floatingMsg = container.lookup("#"+id);
         if (null != floatingMsg) {
             floatingMsg.toBack();
             floatingMsg.setVisible(false);
             container.getChildren().remove(floatingMsg);
         }
-        msgFor.getStyleClass().removeAll("error","information","success","warning");
     }
 
     public static Animation createHorizontalShakeAnimation(Node node) {
@@ -129,6 +143,10 @@ public class Helper {
         return timeline;
     }
 
+    /**
+     * Apply forward animation from button to progressbar. Button is shrunk
+     * to progressbar size and progressbar is added on top of the button.
+     */
     public static void animateButtonToProgressBar(Group root, Control control, double endWidth, double endHeight, Node progressBar) {
 
         double height = control.getHeight();
@@ -162,6 +180,13 @@ public class Helper {
         animation.play();
     }
 
+    /**
+     * Backward animation from progressbar to button. Progressbar is removed
+     * and button is scaled up to its normal size.
+     *
+     * @param id node id of the progressbar. If status is showing in place of
+     *           progressbar then it's the id of the status view
+     */
     public static void animateProgressBarToButton(Group root, Control control, double endWidth, double endHeight, String id) {
 
         Node progressBar = root.lookup("#"+id);
@@ -194,7 +219,7 @@ public class Helper {
                                                          Color baseColor, Color trackColor, Color thumbColor,
                                                          String id,
                                                          boolean showCenterButton, String centerButtonImage,
-                                                         EventHandler<MouseEvent> centerButtonClickHandler) {
+                                                         Runnable onClickCenterBtn) {
         Group progressBar = new Group();
         progressBar.setId(id);
 
@@ -207,14 +232,14 @@ public class Helper {
         base.setCenterX(centerX);
         base.setCenterY(centerY);
         base.setRadius(radius-6);
-        base.setFill(baseColor); // Color.web("#F06292")
+        base.setFill(baseColor);
 
         progressBar.getChildren().add(base);
 
         Path track = new Path();
         track.getElements().add(new MoveTo(centerX,centerY+radius));
         track.getElements().add(new ArcTo(radius,radius,360,centerX-.1,centerY+radius,true,false));
-        track.setStroke(trackColor); // Color.web("#EC407A",.6)
+        track.setStroke(trackColor);
         track.setStrokeWidth(trackWidth);
 
         progressBar.getChildren().add(track);
@@ -225,8 +250,8 @@ public class Helper {
         thumb.setRadiusX(radius);
         thumb.setRadiusY(radius);
         thumb.setStartAngle(0);
-        thumb.setLength(16.66*Math.PI);
-        thumb.setStroke(thumbColor); // Color.web("#EC407A")
+        thumb.setLength(16.66*Math.PI); // thumb length = 1/6 of perimeter of track
+        thumb.setStroke(thumbColor);
         thumb.setStrokeWidth(trackWidth);
 
         progressBar.getChildren().add(thumb);
@@ -237,7 +262,6 @@ public class Helper {
         KeyFrame frame2 = new KeyFrame(Duration.millis(1800),v2);
 
         anim.getKeyFrames().addAll(frame2);
-
         anim.setCycleCount(Timeline.INDEFINITE);
         anim.play();
 
@@ -252,8 +276,8 @@ public class Helper {
             ImageView btnClose = new ImageView(btnCloseImage);
             progressBar.getChildren().add(btnClose);
             btnClose.relocate(btnPositionX, btnPositionY);
-            if (null != centerButtonClickHandler)
-                btnClose.setOnMouseClicked(centerButtonClickHandler);
+            if (null != onClickCenterBtn)
+                btnClose.setOnMouseClicked(e -> onClickCenterBtn.run());
         }
         return progressBar;
     }
@@ -276,6 +300,8 @@ public class Helper {
 
         double centerX = (layoutBounds.getMinX()+layoutBounds.getMaxX())*0.5;
         double centerY = (layoutBounds.getMinY()+layoutBounds.getMaxY())*0.5;
+        // the status circle will animate from completely within (shorted radius)
+        // the progressbar to completely cover (same radius) the progressbar
         double radius = Math.min(centerX,centerY)-8;
         double finalRadius = radius+8;
 
@@ -292,9 +318,14 @@ public class Helper {
         KeyValue v2 = new KeyValue(base.radiusProperty(),finalRadius);
         KeyFrame frame2 = new KeyFrame(Duration.millis(300),v2);
 
+        // add some pause to show the status
         KeyFrame frame3 = new KeyFrame(Duration.millis(1500));
 
         anim.getKeyFrames().addAll(frame2,frame3);
+        // when status is completely grown, remove the
+        // progressbar from the behind and then run
+        // onAnimFinish, which is basically button scale up
+        // animation
         anim.setOnFinished(e -> {
             progressBar.toBack();
             progressBar.setVisible(false);
@@ -316,7 +347,7 @@ public class Helper {
         btnClose.relocate(iconX, iconY);
 
         container.getChildren().add(view);
-        view.relocate(positionX,positionY);
+        view.relocate(positionX,positionY); // draw the status exactly over the progressbar
 
         anim.play();
     }

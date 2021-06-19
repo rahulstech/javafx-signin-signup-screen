@@ -29,6 +29,9 @@ import java.util.ResourceBundle;
 import static rahulstech.javafx.example.Helper.*;
 import static rahulstech.javafx.example.Helper.FloatingMessageType.*;
 
+/**
+ * Controller for login
+ */
 public class LogInController implements Initializable {
 
     public TextField username;
@@ -54,8 +57,7 @@ public class LogInController implements Initializable {
         String _password = password.getText();
         boolean canLogIn = true;
 
-        removeFloatingMessage(password);
-        removeFloatingMessage(username);
+        removeAllErrorFloatingMessage();
         if (isEmptyString(_username)) {
             showErrorFloatingMessage(username,"empty field");
             canLogIn = false;
@@ -99,8 +101,6 @@ public class LogInController implements Initializable {
 
     private void onLogInTaskComplete(UserService.Result result) {
         int resultCode = result.getResultCode();
-        removeFloatingMessage(username);
-        removeFloatingMessage(password);
         if (UserService.ERROR_NO_USER == resultCode) {
             showErrorFloatingMessage(username,result.getMessage());
         }
@@ -117,28 +117,40 @@ public class LogInController implements Initializable {
         // currently there is no use for this method
     }
 
-    private void removeFloatingMessage(TextField which) {
-        if (which == username) {
-            Helper.removeFloatingLabel(root, which,"msgUsername");
-        }
-        else if (which == password) {
-            Helper.removeFloatingLabel(root,which, "msgPassword");
-        }
+    private void removeAllErrorFloatingMessage() {
+        removeFloatingMessage(username,"msgUsername", "error");
+        removeFloatingMessage(passwordHelper.currentField(),"msgPassword","error");
+        passwordHelper.getVisibleField().getStyleClass().remove("error");
+        passwordHelper.getNotVisibleField().getStyleClass().remove("error");
+    }
+
+    private void removeFloatingMessage(TextField which,  String floatingMsgId, String removeControlStyleClass) {
+        Helper.removeFloatingLabel(root,floatingMsgId);
+        which.getStyleClass().removeAll(removeControlStyleClass);
     }
 
     private void showErrorFloatingMessage(TextField which, String message) {
-        FloatingMessageType type = ERROR;
         Label floatingMsg;
         if (which == username) {
-            floatingMsg = createFloatingMessage(message,type,"msgUsername");
+            floatingMsg = createFloatingMessage(message,ERROR,"msgUsername",
+                    () -> removeFloatingMessage(which,"msgUsername","error"));
+
         }
         else if (which == password) {
-            floatingMsg = createFloatingMessage(message,type,"msgPassword");
+            floatingMsg = createFloatingMessage(message,ERROR,"msgPassword",
+                    () -> {
+                removeFloatingMessage(which, "msgPassword","error");
+                passwordHelper.getVisibleField().getStyleClass().remove("error");
+                passwordHelper.getNotVisibleField().getStyleClass().remove("error");
+            });
+            passwordHelper.getVisibleField().getStyleClass().add("error");
+            passwordHelper.getNotVisibleField().getStyleClass().add("error");
         }
         else
             return;
 
-        Helper.showFloatingMessage(root,which,floatingMsg,type,createHorizontalShakeAnimation(floatingMsg));
+        Helper.showFloatingMessage(root,which,floatingMsg,createHorizontalShakeAnimation(floatingMsg));
+        which.getStyleClass().add("error");
     }
 
     private void showProgressBar(UserService service) {
@@ -148,7 +160,7 @@ public class LogInController implements Initializable {
                 Color.web("#F06292"),Color.web("#EC407A",.6),Color.web("#EC407A"),
                 "login-progress",
                 true, App.class.getResource("close_white.png").toExternalForm(),
-                e -> service.cancel());
+                () -> service.cancel());
         Helper.animateButtonToProgressBar(root,btnLogin,endWidth,endHeight,progressBar);
     }
 

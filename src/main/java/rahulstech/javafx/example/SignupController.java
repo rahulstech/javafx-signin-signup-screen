@@ -36,6 +36,9 @@ import static rahulstech.javafx.example.Helper.isEmptyString;
 import static rahulstech.javafx.example.UserService.ERROR_USERNAME;
 import static rahulstech.javafx.example.UserService.SUCCESSFUL;
 
+/**
+ * Controller for signup
+ */
 public class SignupController implements Initializable {
 
     public TextField username;
@@ -81,26 +84,25 @@ public class SignupController implements Initializable {
     }
 
     private void removeUsernameHint() {
-        Helper.removeFloatingLabel(root,username,"msgUsernameHint");
-        username.getStyleClass().removeAll("information");
+        removeFloatingMessage(username,"msgUsernameHint","information");
     }
 
     private void showUsernameHint() {
-        String message = "Use english alphanumeric (A-Z,a-z,0-9) minimum 6 length";
-        Label floatingMsg = Helper.createFloatingMessage(message,INFORMATION,"msgUsernameHint");
-        Helper.showFloatingMessage(root,username,floatingMsg,INFORMATION);
-        username.getStyleClass().add("information");
+        showFloatingMessage("Use english alphanumeric (A-Z,a-z,0-9) minimum 6 length",
+                INFORMATION,"msgUsernameHint",false,
+                username,"information",false);
     }
 
     private void removePasswordHint() {
-        TextField field = passwordHelper.currentField();
-        Helper.removeFloatingLabel(root,field,"msgPasswordHint");
-        field.getStyleClass().removeAll("error","information","success","warning");
+        removeFloatingMessage(passwordHelper.currentField(),"msgPasswordHint",
+                "error","information","success","warning");
+        passwordHelper.getVisibleField().getStyleClass().removeAll("error","information","success","warning");
+        passwordHelper.getVisibleField().getStyleClass().removeAll("error","information","success","warning");
     }
 
     private void showPasswordHint() {
-        TextField field = passwordHelper.currentField();
-        String text = field.getText();
+        String controlStyleClass = "information";
+        String text = password.getText();
         Matcher symbolMatcher = Pattern.compile("[\\!@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\+]+").matcher(text);
         Matcher digitMatcher = Pattern.compile("[\\d]+").matcher(text);
 
@@ -109,40 +111,50 @@ public class SignupController implements Initializable {
         if (isEmptyString(text) || text.length() < 8) {
             builder.append("\u2022 at least 8 character long\n");
             type = WARNING;
+            controlStyleClass = "warning";
         }
         if (!symbolMatcher.find()) {
             builder.append("\u2022 contain at least one of the special characters !@#$%^&*()-+\n");
             type = ERROR;
+            controlStyleClass = "error";
         }
         if (!digitMatcher.find()) {
             builder.append("\u2022 contain at least one digit\n");
             type = ERROR;
+            controlStyleClass = "error";
         }
 
         String message;
         if (builder.length() == 0) {
             message = "Strong Password";
             type = SUCCESS;
+            controlStyleClass = "success";
         }
         else {
             message = "Password must:\n"+builder.toString();
-            if (isEmptyString(text)) type = INFORMATION;
+            if (isEmptyString(text)) {
+                type = INFORMATION;
+                controlStyleClass = "information";
+            }
         }
 
-        Label floatingMsg = Helper.createFloatingMessage(message,type,"msgPasswordHint");
-        Helper.showFloatingMessage(root,field,floatingMsg,type);
+        showFloatingMessage(message,type,"msgPasswordHint",true,
+                password,controlStyleClass,false);
+        passwordHelper.getVisibleField().getStyleClass().add(controlStyleClass);
+        passwordHelper.getNotVisibleField().getStyleClass().add(controlStyleClass);
     }
 
     private void removeConfirmPasswordHint() {
-        TextField field = confPasswordHelper.currentField();
-        Helper.removeFloatingLabel(root,field,"msgConfirmPasswordHint");
-        field.getStyleClass().removeAll("error","information","warning","success");
+        removeFloatingMessage(confirmPassword,"msgConfirmPasswordHint","information");
+        confPasswordHelper.getVisibleField().getStyleClass().remove("information");
+        confPasswordHelper.getNotVisibleField().getStyleClass().remove("information");
     }
 
     private void showConfirmPasswordHint() {
-        TextField field = confPasswordHelper.currentField();
-        Label floatingMsg = Helper.createFloatingMessage("Retype password here",INFORMATION,"msgConfirmPasswordHint");
-        Helper.showFloatingMessage(root,field,floatingMsg,INFORMATION);
+        showFloatingMessage("Retype password",INFORMATION,"msgConfirmPasswordHint",
+                false,confirmPassword,"information",false);
+        confPasswordHelper.getVisibleField().getStyleClass().add("information");
+        confPasswordHelper.getNotVisibleField().getStyleClass().add("information");
     }
 
     public void onChangePasswordVisibility() {
@@ -161,7 +173,7 @@ public class SignupController implements Initializable {
         String familyName = inputFamilyName.getText();
         boolean valid = true;
 
-        removeAllFloatingMessage();
+        removeAllErrorFloatingMessage();
         if (isEmptyString(_username)) {
             showErrorFloatingMessage(username,"empty field");
             valid = false;
@@ -240,55 +252,41 @@ public class SignupController implements Initializable {
         // TODO: implement handleSuccessfulSignUp
     }
 
-    private void removeAllFloatingMessage() {
-        removeFloatingMessage(username);
-        removeFloatingMessage(password);
-        removeFloatingMessage(confirmPassword);
-        removeFloatingMessage(inputGivenName);
-        removeFloatingMessage(inputFamilyName);
+    private void removeAllErrorFloatingMessage() {
+        removeFloatingMessage(username,"msgUsername","error");
+        removeFloatingMessage(password,"msgPassword","error");
+        removeFloatingMessage(confirmPassword,"msgConfirmPassword","error");
+        removeFloatingMessage(inputGivenName,"msgGivenName","error");
+        removeFloatingMessage(inputFamilyName,"msgFamilyName","error");
     }
 
-    private void removeFloatingMessage(TextField which) {
-        if (which == username) {
-            Helper.removeFloatingLabel(root,which,"msgUsername");
-        }
-        else if (which == password) {
-            Helper.removeFloatingLabel(root,which,"msgPassword");
-        }
-        else if (which == confirmPassword) {
-            Helper.removeFloatingLabel(root,which,"msgConfirmPassword");
-        }
-        else if (which == inputGivenName) {
-            Helper.removeFloatingLabel(root,which,"msgGivenName");
-        }
-        else if (which == inputFamilyName) {
-            Helper.removeFloatingLabel(root,which,"msgFamilyName");
-        }
-        which.getStyleClass().removeAll("error","success","warning","information");
+    private void removeFloatingMessage(TextField which, String floatingMsgId, String... removeControlStyleClass) {
+        Helper.removeFloatingLabel(root,floatingMsgId);
+        which.getStyleClass().removeAll(removeControlStyleClass);
     }
 
     private void showErrorFloatingMessage(TextField which, String message) {
-        Helper.FloatingMessageType type = ERROR;
-        Label floatingMsg;
-        if (which == username) {
-            floatingMsg = Helper.createFloatingMessage(message,type,"msgUsername");
-        }
-        else if (which == password) {
-            floatingMsg = Helper.createFloatingMessage(message,type,"msgPassword");
-        }
-        else if (which == confirmPassword) {
-            floatingMsg = Helper.createFloatingMessage(message,type,"msgConfirmPassword");
-        }
-        else if (which == inputGivenName) {
-            floatingMsg = Helper.createFloatingMessage(message,type,"msgGivenName");
-        }
-        else if (which == inputFamilyName) {
-            floatingMsg = Helper.createFloatingMessage(message,type,"msgFamilyName");
-        }
+        String floatingMsgId;
+        if (which == username) floatingMsgId = "msgUsername";
+        else if (which == password) floatingMsgId = "msgPassword";
+        else if (which == confirmPassword) floatingMsgId = "msgConfirmPassword";
+        else if (which == inputGivenName) floatingMsgId = "msgGivenName";
+        else if (which == inputFamilyName) floatingMsgId = "msgFamilyName";
         else return;
+        showFloatingMessage(message,ERROR,floatingMsgId,true,which,"error",true);
+    }
 
-        Helper.showFloatingMessage(root, which, floatingMsg, type,
+    private void showFloatingMessage(String message, Helper.FloatingMessageType type, String floatingMsgId, boolean addRemoveBtn,
+                                     TextField which, String controlStyleClass, boolean animate) {
+        Runnable onClickClose = addRemoveBtn ? () -> removeFloatingMessage(which,floatingMsgId,controlStyleClass) : null;
+        Label floatingMsg = Helper.createFloatingMessage(message,type,floatingMsgId, onClickClose);
+
+        if (animate)
+            Helper.showFloatingMessage(root, which, floatingMsg,
                 Helper.createHorizontalShakeAnimation(floatingMsg));
+        else
+            Helper.showFloatingMessage(root, which, floatingMsg);
+        which.getStyleClass().add(0,controlStyleClass);
     }
 
     private void showProgressBar(UserService service) {
@@ -298,7 +296,7 @@ public class SignupController implements Initializable {
                 Color.web("#F06292"),Color.web("#EC407A",.6),Color.web("#EC407A"),
                 "signup-progress",
                 true, App.class.getResource("close_white.png").toExternalForm(),
-                e -> service.cancel());
+                service::cancel);
         Helper.animateButtonToProgressBar(root,btnSignUp,endWidth,endHeight,progressBar);
     }
 

@@ -22,6 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * A fake service class to simulate login and signup functionalities.
+ * This is subclass of {@link Service} of type {@link Result}.
+ *
+ * @see Result
+ */
 public class UserService extends Service<UserService.Result> {
 
     public static final int ERROR_NO_USER = 10;
@@ -40,6 +46,7 @@ public class UserService extends Service<UserService.Result> {
         }
     }
 
+    // next task to be executed
     private Task<Result> task = null;
 
     public UserService() { }
@@ -109,7 +116,7 @@ public class UserService extends Service<UserService.Result> {
                 }
             }
 
-            simulateDelay(500);
+            simulateDelay(1500);
 
             if (null == found) {
                 result.resultCode = ERROR_NO_USER;
@@ -172,5 +179,4 @@ public class UserService extends Service<UserService.Result> {
             return result;
         }
     }
-
 }

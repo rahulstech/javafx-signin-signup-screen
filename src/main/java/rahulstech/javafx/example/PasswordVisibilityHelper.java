@@ -25,6 +25,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * This helper class handles the showing and masking password text.
+ * Currently it uses a separate {@link TextField} which is created
+ * during the instantiating this class and added to the same location
+ * as the target password field. The password masking and unmasking is
+ * controlled by a imageview. The imageview image is also change by this
+ * class.
+ */
 public class PasswordVisibilityHelper {
 
     private Group parent;
@@ -82,6 +90,14 @@ public class PasswordVisibilityHelper {
 
     public TextField currentField() {
         return isVisible() ? visibleField : notVisibleField;
+    }
+
+    public TextField getVisibleField() {
+        return visibleField;
+    }
+
+    public PasswordField getNotVisibleField() {
+        return notVisibleField;
     }
 
     public void addFocusChangeListener(ChangeListener<Boolean> listener) {
