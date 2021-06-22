@@ -50,19 +50,19 @@ Features of this sample applications are:
 </tr>
 <tr>
 <td>Input Error Message</td>
-<td><img src="./screenshots/screenshots/empty_field.png" alt="eror message"/></td>
+<td><img src="./screenshots/empty_field.png" alt="eror message"/></td>
 </tr>
 <tr>
 <td>Progress Bar Running</td>
-<td><img src="./screenshots/screenshots/progress_bar_running.png" alt="progress bar running"/></td>
+<td><img src="./screenshots/progress_bar_running.png" alt="progress bar running"/></td>
 </tr>
 <tr>
 <td>Status Error</td>
-<td><img src="./screenshots/screenshots/status_error.png" alt="status error"/></td>
+<td><img src="./screenshots/status_error.png" alt="status error"/></td>
 </tr>
 <tr>
 <td>Status Successful</td>
-<td><img src="./screenshots/screenshots/status_successful.png" alt="status successful"/></td>
+<td><img src="./screenshots/status_successful.png" alt="status successful"/></td>
 </tr>
 </tbody>
 </table>
